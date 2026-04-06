@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/moon/Desktop/likexin/**)",
+      "Read(//c/Users/moon/Desktop/nongcaibin/yumai/yuma_project/backend/services/**)",
+      "Read(//c/Users/moon/Desktop/nongcaibin/yumai/yuma_project/backend/routes/**)",
+      "Read(//c/Users/moon/Desktop/nongcaibin/yumai/yumai_app/lib/services/**)",
+      "Read(//c/Users/moon/Desktop/nongcaibin/yumai/yumai_app/lib/screen/**)",
+      "Read(//c/Users/moon/Desktop/nongcaibin/**)",
+      "Bash(cp \"/c/Users/moon/Desktop/likexin/yumai/yuma_project/data/stories.json\" \"/c/Users/moon/Desktop/yumai/yuma_project/data/stories.json.v2.bak\")",
+      "Bash(cp \"/c/Users/moon/Desktop/likexin/yumai/yuma_project/data/stories.json\" \"/c/Users/moon/Desktop/yumai/yuma_project/data/stories.json\")",
+      "Bash(cp \"/c/Users/moon/Desktop/likexin/yumai/yuma_project/data/vector.index\" \"/c/Users/moon/Desktop/yumai/yuma_project/data/vector.index\")",
+      "Bash(cp \"/c/Users/moon/Desktop/likexin/yumai/yuma_project/data/vector_meta.json\" \"/c/Users/moon/Desktop/yumai/yuma_project/data/vector_meta.json\")"
+    ]
+  }
+}
