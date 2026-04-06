@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    网络安全配置：允许对开发环境地址使用明文HTTP
+    Android 9 (API 28) 起默认禁止明文HTTP，必须在此显式允许
+
+    允许的地址：
+    - 10.0.2.2       Android模拟器访问宿主机
+    - 127.0.0.1      本地回环（iOS模拟器/Web）
+    - 172.27.68.202  局域网宿主机IP（真机调试）
+    - 172.27.0.0/17  整个172.27.x.x子网（同一局域网内所有设备）
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Android模拟器访问宿主机 -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- 本地回环地址 -->
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <!-- 当前宿主机局域网IP（真机调试用） -->
+        <domain includeSubdomains="false">172.27.68.202</domain>
+    </domain-config>
+</network-security-config>

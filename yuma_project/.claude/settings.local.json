@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"c:/Users/moon/Desktop/yuma_project/backend/static/images\")",
+      "Bash(mkdir -p \"c:/Users/moon/Desktop/yuma_project/backend/scripts\")",
+      "Bash(python backend/scripts/setup_story_cover.py)",
+      "Bash(python -c \"import json; json.load\\(open\\(''data/stories.json'', encoding=''utf-8''\\)\\); print\\(''JSON 格式正常''\\)\")",
+      "Bash(python -c \":*)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''''hidden_size:'''', d.get\\(''''hidden_size''''\\)\\)\")"
+    ]
+  }
+}
