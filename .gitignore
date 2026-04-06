@@ -1,0 +1,22 @@
+.claude/
+.cursor/
+.gradle/
+.idea/
+.vscode/
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+build/
+.dart_tool/
+.packages
+.pub/
+
+# 图片不上传
+yuma_project/backend/static/images/
+yuma_project/data/images/
+yumai_app/assets/images/
+
+# 模型不上传
+yuma_project/models/
