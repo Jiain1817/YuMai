@@ -48,6 +48,11 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   /// 详情页局部语言状态，不影响全局 LanguageProvider
   String? _localLang;
 
+  /// 问答区域语言状态（与正文同步）
+  String _qaUiLang = 'zh'; // 当前问答使用的语言
+  bool _qaShowLangSwitch = false; // 是否显示语言切换按钮（仅用于判断是否有民族，不再显示）
+  String _qaEthnicLang = ''; // 故事原文语言代码
+
   final Map<String, Map<String, String>> _translations =
       AppTranslations.storyDetail;
 
@@ -95,6 +100,19 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       final savedPageIndex = await _getSavedReadingPageIndexDirect(
         widget.storyId,
       );
+
+      // 初始化问答语言状态
+      final ethnic = story.ethnic;
+      if (ethnic.contains('藏')) {
+        _qaShowLangSwitch = true;
+        _qaEthnicLang = 'bo';
+      } else if (ethnic.contains('彝')) {
+        _qaShowLangSwitch = true;
+        _qaEthnicLang = 'ii';
+      } else {
+        _qaShowLangSwitch = false;
+      }
+      _qaUiLang = 'zh'; // 默认汉语
 
       setState(() {
         _story = story;
@@ -343,6 +361,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     final newLang = _currentLang == 'zh' ? ethnicLang : 'zh';
     setState(() {
       _localLang = newLang;
+      _qaUiLang = newLang; // 添加这一行
     });
   }
 
@@ -1249,7 +1268,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '清空',
+                          _t('clear'),
                           style: TextStyle(fontSize: 12, color: textSecondary),
                         ),
                       ],
@@ -1312,7 +1331,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            '向 AI 提问关于这个故事的问题',
+            _t('askPrompt'), // 改为 _t
             style: TextStyle(
               fontSize: 14,
               color: textSecondary,
@@ -1321,7 +1340,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '例如：故事的主角是谁？讲述了什么道理？',
+            _t('examplePrompt'), // 改为 _t
             style: TextStyle(fontSize: 12, color: textSecondary.withAlpha(153)),
           ),
         ],
@@ -1533,7 +1552,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
               maxLines: 3,
               minLines: 1,
               decoration: InputDecoration(
-                hintText: '输入你的问题...',
+                hintText: _t('inputQuestion'),
                 hintStyle: TextStyle(
                   color: textSecondary.withAlpha(153),
                   fontSize: 14,
@@ -1597,6 +1616,8 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     final question = _questionController.text.trim();
     if (question.isEmpty) return;
 
+    final detectedLang = detectLanguage(question);
+
     setState(() {
       _isAsking = true;
       _chatMessages.add({'role': 'user', 'content': question});
@@ -1622,7 +1643,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
         question: question,
         useRag: false,
         history: history,
-        lang: _currentLang,
+        lang: detectedLang, // 改为自动检测的语言
       );
 
       setState(() {
