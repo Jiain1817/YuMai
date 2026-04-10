@@ -119,6 +119,17 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
         _isLoading = false;
       });
 
+      //  新增：语言不匹配时弹窗（仅当还没有局部语言设置时）
+      if (_localLang == null && _qaEthnicLang.isNotEmpty) {
+        final globalLang = context.read<LanguageProvider>().currentLang;
+        final isMismatch =
+            (globalLang == 'bo' && _qaEthnicLang != 'bo') ||
+            (globalLang == 'ii' && _qaEthnicLang != 'ii');
+        if (isMismatch) {
+          _showLanguageMismatchDialog(globalLang, _qaEthnicLang);
+        }
+      }
+
       // 如果有保存的阅读位置且不是第一页，提示用户继续阅读
       if (savedPageIndex > 0 && mounted) {
         _showContinueReadingDialog(story, savedPageIndex);
@@ -149,6 +160,48 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       debugPrint('获取阅读位置失败: $e');
     }
     return 0;
+  }
+
+  void _showLanguageMismatchDialog(String globalLang, String storyLang) {
+    final isTibetanStory = storyLang == 'bo';
+    final storyEthnic = isTibetanStory ? '藏族' : '彝族';
+    final globalLangName = globalLang == 'bo' ? '藏语' : '彝语';
+    final originalLangName = isTibetanStory ? '藏语原文' : '彝语原文';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // 必须做出选择
+      builder: (context) => AlertDialog(
+        title: const Text('语言不匹配'),
+        content: Text(
+          '当前全局语言为$globalLangName，但这个故事是$storyEthnic故事。\n\n请选择显示语言：',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // 选择汉语
+              setState(() {
+                _localLang = 'zh';
+                _qaUiLang = 'zh';
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('汉语'),
+          ),
+          TextButton(
+            onPressed: () {
+              // 选择原文
+              setState(() {
+                _localLang = storyLang;
+                _qaUiLang = storyLang;
+              });
+              Navigator.pop(context);
+            },
+            child: Text(originalLangName),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showContinueReadingDialog(Story story, int savedPageIndex) {
@@ -704,11 +757,41 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   }
 
   Widget _buildTitleSection(Color textPrimary, Color secondary, bool isDark) {
+    // 根据当前语言获取标题
+    String titleText;
+    final lang = _currentLang;
+    if (lang == 'bo' &&
+        _story!.titleBo != null &&
+        _story!.titleBo!.isNotEmpty) {
+      titleText = _story!.titleBo!;
+    } else if (lang == 'ii' &&
+        _story!.titleIi != null &&
+        _story!.titleIi!.isNotEmpty) {
+      titleText = _story!.titleIi!;
+    } else {
+      titleText = _story!.title;
+    }
+
+    String _getLocalizedEthnic() {
+      final lang = _currentLang;
+      if (lang == 'bo' &&
+          _story!.ethnicBo != null &&
+          _story!.ethnicBo!.isNotEmpty) {
+        return _story!.ethnicBo!;
+      }
+      if (lang == 'ii' &&
+          _story!.ethnicIi != null &&
+          _story!.ethnicIi!.isNotEmpty) {
+        return _story!.ethnicIi!;
+      }
+      return _story!.ethnic;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _story!.title,
+          titleText,
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w700,
@@ -742,6 +825,21 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     Color surfaceColor,
     Color borderColor,
   ) {
+    // 根据当前语言获取简介
+    String introText;
+    final lang = _currentLang;
+    if (lang == 'bo' &&
+        _story!.introBo != null &&
+        _story!.introBo!.isNotEmpty) {
+      introText = _story!.introBo!;
+    } else if (lang == 'ii' &&
+        _story!.introIi != null &&
+        _story!.introIi!.isNotEmpty) {
+      introText = _story!.introIi!;
+    } else {
+      introText = _story!.intro;
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -751,7 +849,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
         border: Border.all(color: borderColor),
       ),
       child: Text(
-        _story!.intro,
+        introText,
         style: TextStyle(fontSize: 14, color: textSecondary, height: 1.6),
       ),
     );

@@ -1,8 +1,14 @@
 class Story {
   final int id;
   final String title;
+  final String? titleBo;
+  final String? titleIi;
   final String ethnic;
+  final String? ethnicBo;
+  final String? ethnicIi;
   final String intro;
+  final String? introBo;
+  final String? introIi;
   final String chineseText;
   final String yiText;
   final String tibetanText;
@@ -11,8 +17,14 @@ class Story {
   Story({
     required this.id,
     required this.title,
+    this.titleBo,
+    this.titleIi,
     required this.ethnic,
+    this.ethnicBo,
+    this.ethnicIi,
     required this.intro,
+    this.introBo,
+    this.introIi,
     required this.chineseText,
     required this.yiText,
     required this.tibetanText,
@@ -74,8 +86,14 @@ class Story {
           ? json['id']
           : int.tryParse(_safeString(json['id'])) ?? 0,
       title: _safeString(json['title']),
+      titleBo: _safeString(json['title_bo']),
+      titleIi: _safeString(json['title_ii']),
       ethnic: _safeString(json['ethnic']),
+      ethnicBo: _safeString(json['ethnicBo']),
+      ethnicIi: _safeString(json['ethnicIi']),
       intro: _safeString(json['intro']),
+      introBo: _safeString(json['intro_bo']),
+      introIi: _safeString(json['intro_ii']),
       chineseText: chineseText.isNotEmpty ? chineseText : '',
       yiText: yiText,
       tibetanText: tibetanText,
@@ -95,8 +113,14 @@ class Story {
     return {
       'id': id,
       'title': title,
+      'title_bo': titleBo,
+      'title_ii': titleIi,
       'ethnic': ethnic,
+      'ethnicbo': ethnicBo,
+      'ethnicii': ethnicIi,
       'intro': intro,
+      'intro_bo': introBo,
+      'intro_ii': introIi,
       'chinese_text': chineseText,
       'yi_text': yiText,
       'tibetan_text': tibetanText,

@@ -26,12 +26,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // LanguageProvider 在 init() 时已从 SharedPreferences 读取保存的语言
-    // 不再强制覆盖，让它保持已保存的状态
   }
 
   String get _currentLang {
-    // 优先用 LanguageProvider，否则用初始值
     try {
       return context.watch<LanguageProvider>().currentLang;
     } catch (_) {
@@ -60,52 +57,65 @@ class _HomeScreenState extends State<HomeScreen> {
         : AppColors.lightTextSec;
     final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final backgroundColor = isDark ? AppColors.darkBg : AppColors.lightBg;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            children: [
-              // 顶栏
-              _TopBar(
-                currentLang: _currentLang,
-                languages: _languages,
-                onLanguageChange: _changeLanguage,
-                textSecondary: textSecondary,
-                primary: primary,
-                surface: surface,
-                borderColor: borderColor,
-                isDark: isDark,
-              ),
+      body: Container(
+        // 根据深浅模式使用不同的背景
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: isDark
+                ? AssetImage('assets/images/home_bg_dark.png') // 夜晚模式用暗色背景
+                : AssetImage('assets/images/home_bg.jpg'), // 白天模式用亮色背景
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              children: [
+                // 顶栏
+                _TopBar(
+                  currentLang: _currentLang,
+                  languages: _languages,
+                  onLanguageChange: _changeLanguage,
+                  textSecondary: textSecondary,
+                  primary: primary,
+                  surface: surface,
+                  borderColor: borderColor,
+                  isDark: isDark,
+                ),
 
-              // 中心内容
-              Expanded(
-                child: Center(
-                  child: _HeroContent(
-                    primary: primary,
-                    secondary: secondary,
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                    subtitle: _getSubtitle(),
-                    isDark: isDark,
-                    currentLang: _currentLang,
+                // 中心内容
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 60),
+                      _HeroContent(
+                        primary: primary,
+                        secondary: secondary,
+                        textPrimary: textPrimary,
+                        textSecondary: textSecondary,
+                        subtitle: _getSubtitle(),
+                        isDark: isDark,
+                        currentLang: _currentLang,
+                      ),
+                    ],
                   ),
                 ),
-              ),
 
-              // 底部 CTA
-              Padding(
-                padding: const EdgeInsets.only(bottom: 40),
-                child: _EnterButton(
-                  primary: primary,
-                  onTap: widget.onEnterApp,
-                  ctaText: AppTranslations.home[_currentLang]!['cta']!,
+                // 底部 CTA
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: _EnterButton(
+                    primary: primary,
+                    onTap: widget.onEnterApp,
+                    ctaText: AppTranslations.home[_currentLang]!['cta']!,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -138,10 +148,6 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final currentLangData = languages.firstWhere(
-      (l) => l['code'] == currentLang,
-      orElse: () => languages[0],
-    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -186,7 +192,6 @@ class _TopBar extends StatelessWidget {
           const Spacer(),
 
           // 语言切换
-          // 语言切换（公共组件）
           buildLanguageSwitcher(
             fontSize: 14,
             iconSize: 16,
@@ -218,7 +223,7 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-// ============ 中心 Hero 内容 ============
+// ============ 中心 Hero 内容（删除了语脉大标题） ============
 class _HeroContent extends StatelessWidget {
   final Color primary;
   final Color secondary;
@@ -243,28 +248,8 @@ class _HeroContent extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 艺术字 — 语脉
-        ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [primary, secondary],
-          ).createShader(bounds),
-          child: Text(
-            '语脉',
-            style: TextStyle(
-              fontSize: 80,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 12,
-              height: 1,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // 藏语/彝语副标题
+        // ⚠️ 这里删除了原来的大标题 "语脉"（因为图片里已经有了）
+        // 只保留副标题（藏语/彝语）
         Text(
           subtitle,
           style: TextStyle(

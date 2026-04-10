@@ -735,36 +735,40 @@ class _AIChatScreenState extends State<AIChatScreen> {
                                     children:
                                         (message['suggestions'] as List<String>)
                                             .map((q) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              _questionController.text = q;
-                                              _sendQuestion();
-                                            },
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 6,
+                                              return GestureDetector(
+                                                onTap: () {
+                                                  _questionController.text = q;
+                                                  _sendQuestion();
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: surface,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          16,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: border.withAlpha(
+                                                        128,
+                                                      ),
+                                                    ),
                                                   ),
-                                              decoration: BoxDecoration(
-                                                color: surface,
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                                border: Border.all(
-                                                  color: border.withAlpha(128),
+                                                  child: Text(
+                                                    q,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: textSecondary,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                              child: Text(
-                                                q,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        })
-                                        .toList(),
+                                              );
+                                            })
+                                            .toList(),
                                   ),
                                 ),
                             ],

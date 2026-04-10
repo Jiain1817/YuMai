@@ -66,7 +66,11 @@ def list_stories(stories: Optional[List[Dict[str, Any]]] = None) -> List[Dict]:
         item: Dict[str, Any] = {
             "id": story["id"],
             "title": story["title"],
+            "title_bo": story.get("title_bo", ""),      # 新增
+            "title_ii": story.get("title_ii", ""),     # 新增
             "ethnic": story.get("ethnic", ""),
+            "ethnicBo": story.get("ethnicBo", ""),     # 改为驼峰，匹配 JSON
+            "ethnicIi": story.get("ethnicIi", ""),      # 新增
             "intro": story.get("intro", ""),
             "summary": summary,
             "cover_image": story.get("cover_image"),

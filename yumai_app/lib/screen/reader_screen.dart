@@ -47,8 +47,23 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _pageController = PageController(initialPage: _currentPageIndex);
     _splitContent();
     _loadReaderSettings();
+    // 延迟分页，等待布局完成
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _splitContent();
+      setState(() {});
+      _pageController = PageController(initialPage: _currentPageIndex);
+    });
     // 隐藏状态栏
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
+
+  // ⭐ 在这里添加 didChangeDependencies 方法
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 当语言改变时重新分页
+    _splitContent();
+    setState(() {});
   }
 
   @override
@@ -87,6 +102,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
   void _splitContent() {
     final content = _getContent();
     _pages = _splitIntoPages(content);
+
+    debugPrint('内容长度: ${content.length}, 分页数量: ${_pages.length}');
+
     if (_currentPageIndex >= _pages.length) {
       _currentPageIndex = _pages.length - 1;
     }
@@ -95,18 +113,62 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
   }
 
+  /// 根据屏幕大小动态计算每页可容纳的字数
+  int _calculateCharsPerPage() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // 减去顶部栏(80) + 底部栏(100) + padding(48) ≈ 228
+    final usableHeight = screenHeight - 228;
+
+    // 每行大约能放多少字（中文字符宽度 ≈ 字体大小）
+    final charsPerLine = (screenWidth / _fontSize).floor();
+
+    // 能放多少行
+    final lines = (usableHeight / (_fontSize * 1.8)).floor();
+
+    // 每页总字数
+    return (charsPerLine * lines).clamp(100, 1000);
+  }
+
   /// 将长文本分页（每页约 500 字）
+  /// 将长文本分页（根据屏幕大小动态分页）
   List<String> _splitIntoPages(String text) {
-    const int charsPerPage = 500;
+    // 如果还没有 context（首次加载），先用默认值
+    int charsPerPage;
+    try {
+      charsPerPage = _calculateCharsPerPage();
+    } catch (e) {
+      charsPerPage = 300; // 默认值
+    }
+
     if (text.length <= charsPerPage) return [text];
 
     List<String> pages = [];
-    List<String> paragraphs = text.split(RegExp(r'\n\n+'));
 
+    // 按字符数分割（保持段落完整性）
+    List<String> paragraphs = text.split(RegExp(r'\n\n+'));
     StringBuffer currentPage = StringBuffer();
     int currentLength = 0;
 
     for (final para in paragraphs) {
+      // 如果单个段落超过一页，强制分割
+      if (para.length > charsPerPage) {
+        if (currentPage.isNotEmpty) {
+          pages.add(currentPage.toString().trim());
+          currentPage.clear();
+          currentLength = 0;
+        }
+        for (int i = 0; i < para.length; i += charsPerPage) {
+          int end = (i + charsPerPage < para.length)
+              ? i + charsPerPage
+              : para.length;
+          pages.add(para.substring(i, end));
+        }
+        continue;
+      }
+
+      // 正常段落累积
       if (currentLength + para.length > charsPerPage &&
           currentPage.isNotEmpty) {
         pages.add(currentPage.toString().trim());
@@ -181,7 +243,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    setState(() => _fontSize = tempSize);
+                    setState(() {
+                      _fontSize = tempSize;
+                      _splitContent(); // ⭐ 重新分页
+                      _pageController = PageController(
+                        initialPage: 0,
+                      ); // 重置到第一页
+                    });
                     _saveReaderSettings();
                     Navigator.pop(context);
                   },
@@ -210,6 +278,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         child: Stack(
           children: [
             // 页面内容 - PageView
+            // 页面内容 - PageView（左右翻页，不可上下滑动）
             PageView.builder(
               controller: _pageController,
               itemCount: _pages.length,
@@ -219,21 +288,25 @@ class _ReaderScreenState extends State<ReaderScreen> {
               },
               itemBuilder: (context, index) {
                 return Container(
-                  padding: const EdgeInsets.fromLTRB(24, 80, 24, 100),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      _pages[index],
-                      style: TextStyle(
-                        fontSize: _fontSize,
-                        height: 2.0,
-                        color: pageTextColor,
-                        fontFamily: _currentLang == 'bo'
-                            ? 'Noto Serif Tibetan'
-                            : _currentLang == 'ii'
-                            ? 'Noto Sans Yi'
-                            : null,
-                      ),
+                  padding: EdgeInsets.fromLTRB(
+                    24,
+                    80,
+                    24,
+                    MediaQuery.of(context).padding.bottom + 120,
+                  ),
+                  child: Text(
+                    _pages[index],
+                    style: TextStyle(
+                      fontSize: _fontSize,
+                      height: 1.8,
+                      color: pageTextColor,
+                      fontFamily: _currentLang == 'bo'
+                          ? 'Noto Serif Tibetan'
+                          : _currentLang == 'ii'
+                          ? 'Noto Sans Yi'
+                          : null,
                     ),
+                    textAlign: TextAlign.justify,
                   ),
                 );
               },

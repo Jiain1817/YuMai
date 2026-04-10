@@ -45,6 +45,34 @@ class _StoryListScreenState extends State<StoryListScreen> {
     }
   }
 
+  // 本地标题翻译映射 (id -> 语言 -> 标题)
+  final Map<int, Map<String, String>> _titleTranslations = {
+    1: {
+      // 格萨尔王传
+      'bo': 'གེ་སར་རྒྱལ་པོའི་སྒྲུང་།',
+      'ii': 'ꀉꂿꄯꒉ ꉬꇁꌠ',
+    },
+    2: {
+      // 阿诗玛
+      'bo': 'ཨ་ཧྲི་མ།',
+      'ii': 'ꀋꏂꃀ',
+    },
+  };
+
+  // 本地民族翻译映射 (id -> 语言 -> 民族名称)
+  final Map<int, Map<String, String>> _ethnicTranslations = {
+    1: {
+      // 格萨尔王传
+      'bo': 'བོད་རིགས།',
+      'ii': 'ꆈꌠ',
+    },
+    2: {
+      // 阿诗玛
+      'bo': 'ཡི་རིགས།',
+      'ii': 'ꆈꌠ',
+    },
+  };
+
   String _t(String key) {
     // 直接从 LanguageProvider 获取当前语言，确保语言切换后能拿到最新值
     final lang = context.watch<LanguageProvider>().currentLang;
@@ -85,6 +113,42 @@ class _StoryListScreenState extends State<StoryListScreen> {
       return true;
     }
     return false;
+  }
+
+  String _getLocalizedTitle(Story story) {
+    final lang = _currentLang;
+    // 优先使用后端返回的多语言字段（如果存在）
+    if (lang == 'bo' && story.titleBo != null && story.titleBo!.isNotEmpty) {
+      return story.titleBo!;
+    }
+    if (lang == 'ii' && story.titleIi != null && story.titleIi!.isNotEmpty) {
+      return story.titleIi!;
+    }
+    // 如果后端没有，使用本地映射表
+    if (_titleTranslations.containsKey(story.id) &&
+        _titleTranslations[story.id]!.containsKey(lang)) {
+      return _titleTranslations[story.id]![lang]!;
+    }
+    // 默认返回中文标题
+    return story.title;
+  }
+
+  String _getLocalizedEthnic(Story story) {
+    final lang = _currentLang;
+    // 优先使用后端返回的多语言字段
+    if (lang == 'bo' && story.ethnicBo != null && story.ethnicBo!.isNotEmpty) {
+      return story.ethnicBo!;
+    }
+    if (lang == 'ii' && story.ethnicIi != null && story.ethnicIi!.isNotEmpty) {
+      return story.ethnicIi!;
+    }
+    // 使用本地映射表
+    if (_ethnicTranslations.containsKey(story.id) &&
+        _ethnicTranslations[story.id]!.containsKey(lang)) {
+      return _ethnicTranslations[story.id]![lang]!;
+    }
+    // 默认返回中文民族
+    return story.ethnic;
   }
 
   @override
@@ -307,27 +371,56 @@ class _StoryListScreenState extends State<StoryListScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 16), // 整体下移
+          // 三种语言分布布局
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // 汉语
               Text(
-                _t('pageTitleSubBo'),
+                _getPageTitle(), // 或者 _t('pageTitle')
+                style: TextStyle(fontSize: 12, color: textSecondary),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '|',
                 style: TextStyle(
                   fontSize: 12,
-                  color: textSecondary,
-                  fontFamily: 'Noto Serif Tibetan',
+                  color: textSecondary.withAlpha(102),
                 ),
               ),
-              const SizedBox(width: 12),
-              Text('·', style: TextStyle(fontSize: 12, color: textSecondary)),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
+              // 藏语
+              Flexible(
+                child: Text(
+                  _t('pageTitleSubBo'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: textSecondary,
+                    fontFamily: 'Noto Serif Tibetan',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
-                _t('pageTitleSubIi'),
+                '|',
                 style: TextStyle(
                   fontSize: 12,
-                  color: textSecondary,
-                  fontFamily: 'Noto Sans Yi',
+                  color: textSecondary.withAlpha(102),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 彝语
+              Flexible(
+                child: Text(
+                  _t('pageTitleSubIi'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: textSecondary,
+                    fontFamily: 'Noto Sans Yi',
+                  ),
                 ),
               ),
             ],
@@ -569,8 +662,8 @@ class _StoryListScreenState extends State<StoryListScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
+      mainAxisSpacing: 20,
+      crossAxisSpacing: 20,
       itemCount: _displayedStories.length,
       itemBuilder: (context, index) {
         final story = _displayedStories[index];
@@ -591,7 +684,7 @@ class _StoryListScreenState extends State<StoryListScreen> {
   // 根据故事内容计算卡片高度（瀑布流效果）
   double _calculateCardHeight(Story story, int index) {
     // 基础高度
-    double height = 180.0;
+    double height = 150.0;
 
     // 推荐的故事更高一些
     if (_isRecommended(story)) {
@@ -612,9 +705,10 @@ class _StoryListScreenState extends State<StoryListScreen> {
     }
 
     // 限制最大最小高度
-    return height.clamp(160.0, 300.0);
+    return height.clamp(150.0, 150.0);
   }
 
+  // Story card - with cover image support
   // Story card - with cover image support
   Widget _buildStoryCard(
     BuildContext context,
@@ -627,6 +721,7 @@ class _StoryListScreenState extends State<StoryListScreen> {
   ) {
     final bool hasCover =
         story.coverImage != null && story.coverImage!.isNotEmpty;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -640,21 +735,20 @@ class _StoryListScreenState extends State<StoryListScreen> {
       child: Container(
         height: cardHeight,
         decoration: BoxDecoration(
-          color: surfaceColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withAlpha(25),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-              spreadRadius: -4,
-            ),
-          ],
+          // 渐变背景（没有图片时显示）
+          gradient: hasCover
+              ? null
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [primary.withAlpha(200), secondary.withAlpha(200)],
+                ),
+          boxShadow: [], // 去掉所有阴影
         ),
         child: Stack(
           children: [
-            // Background: cover image (fills entire card)
+            // 背景图片（如果有）
             if (hasCover)
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
@@ -666,9 +760,19 @@ class _StoryListScreenState extends State<StoryListScreen> {
                   errorBuilder: (context, error, stackTrace) => Container(
                     width: double.infinity,
                     height: double.infinity,
-                    color: borderColor,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [primary, secondary],
+                      ),
+                    ),
                     child: Center(
-                      child: Icon(Icons.broken_image, size: 40, color: primary),
+                      child: Icon(
+                        Icons.menu_book,
+                        size: 40,
+                        color: Colors.white70,
+                      ),
                     ),
                   ),
                 ),
@@ -677,69 +781,74 @@ class _StoryListScreenState extends State<StoryListScreen> {
               Container(
                 width: double.infinity,
                 height: double.infinity,
-                color: borderColor,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [primary, secondary],
+                  ),
+                ),
                 child: Center(
-                  child: Icon(Icons.menu_book, size: 40, color: primary),
+                  child: Icon(Icons.menu_book, size: 40, color: Colors.white70),
                 ),
               ),
 
-            // Foreground: text content (bottom overlay with semi-transparent background)
+            // 半透明渐变遮罩（让文字更清晰）
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.transparent,
+                      Colors.black.withAlpha(179), // 底部深色渐变
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
+              ),
+            ),
+
+            // 文字内容
             Positioned(
               left: 0,
               right: 0,
-              bottom: 4, // Space for recommendation indicator bar
+              bottom: 0,
               child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withAlpha(179), // Dark at bottom
-                      Colors.black.withAlpha(77), // Gradient at top
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      story.title,
+                      _getLocalizedTitle(story),
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black54,
-                            offset: Offset(0, 1),
-                            blurRadius: 2,
-                          ),
-                        ],
+                        // 去掉文字阴影
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     if (story.ethnic.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: 6,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withAlpha(51),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          story.ethnic,
+                          _getLocalizedEthnic(story),
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             color: Colors.white,
                             fontWeight: FontWeight.w500,
                           ),
@@ -750,24 +859,26 @@ class _StoryListScreenState extends State<StoryListScreen> {
               ),
             ),
 
-            // Top layer: recommendation indicator bar
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                height: 4,
-                decoration: BoxDecoration(
-                  color: _isRecommended(story)
-                      ? secondary.withAlpha(204)
-                      : primary.withAlpha(77),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
+            // 推荐标识条（可选，保留）
+            if (_isRecommended(story))
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
+                  decoration: BoxDecoration(
+                    color: secondary.withAlpha(204),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                  ),
+                  child: const Icon(Icons.star, size: 14, color: Colors.white),
                 ),
               ),
-            ),
           ],
         ),
       ),
